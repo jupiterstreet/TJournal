@@ -1,24 +1,27 @@
 use std::{env, path::PathBuf};
+mod rummage;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let args: Vec<&str> = args.iter().map(|a| a.as_str()).collect();
     match *args.get(1).expect("Missing first arg") {
         "open" => open(&args[2..]),
-        _ => todo!("undone")
+        _ => todo!("undone"),
     }
 }
 
 fn open(args: &[&str]) {
     if args.is_empty() {
-        tj_dir().join(local_now_string());
+        tj_dir().join(local_now_string()).with_extension(".tj");
         return;
     }
     ()
 }
 
 fn tj_dir() -> PathBuf {
-    dirs::home_dir().expect("unable to determine home directory").join(".tj")
+    dirs::home_dir()
+        .expect("unable to determine home directory")
+        .join(".tj") //TODO: MAKE STATIC CONSTANT
 }
 
 fn local_now_string() -> String {
