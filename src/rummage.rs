@@ -2,7 +2,27 @@ use std::{
     env,
     ffi::OsStr,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
+
+pub fn edit<P: AsRef<Path>>(path: P) -> Result<(), &'static str> {
+    let (editor, args) = get_editor_args()?;
+    let status = Command::new(editor)
+        .args(args)
+        .arg(path.as_ref())
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+        .or_else(|_| Err("Failed to execute editor executable"))?
+        .status;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err("Something went wrong...")
+    }
+}
 
 static ENV_VARS: &[&str] = &["VISUAL", "EDITOR"];
 

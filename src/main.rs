@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 mod rummage;
 
 fn main() {
@@ -12,7 +12,11 @@ fn main() {
 
 fn open(args: &[&str]) {
     if args.is_empty() {
-        tj_dir().join(local_now_string()).with_extension(".tj");
+        let path = tj_dir();
+        if !path.exists() {
+            fs::create_dir(&path).unwrap();
+        }
+        rummage::edit(path.join(local_now_string()).with_extension("tj")).unwrap();
         return;
     }
     ()
