@@ -16,15 +16,28 @@ fn main() {
 }
 
 fn open(args: &[&str]) {
-    if args.is_empty() {
-        open_for_day(local_now_string());
-        return;
-    }
-    if let Some(arg) = args.get(0) {
-        let date = date_format(arg).unwrap().format("%d-%m-%Y").to_string();
-        open_for_day(date);
-    }
-    ()
+    open_for_day(if args.is_empty() {
+        local_now_string()
+    } else {
+        let mut iter = args.into_iter();
+        let mut res = if !args.get(0).unwrap().starts_with('@') {
+            date_format(iter.next().unwrap())
+                .unwrap()
+                .format("%d-%m-%Y")
+                .to_string()
+        } else {
+            local_now_string()
+        };
+
+        while let Some(tag) = iter.next() {
+            if !tag.starts_with('@') {
+                panic!("Unknown argument")
+            }
+            res.push_str(format!("_{}", &tag[1..]).as_str())
+        }
+
+        res
+    })
 }
 
 fn date_format(date: &str) -> Result<NaiveDate, &str> {
