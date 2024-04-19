@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 dirs = "5.0.1"
+regex = "1.10.4"
 tempfile = "3.10.1"
 
 [dependencies.chrono]
