@@ -1,6 +1,6 @@
 # T JOURNAL
-- TODO NOTES:
-~~1. get clappin~~
+CURRENT FLOW:
+
 1. > parse args
 2. > check/create dir.
 
@@ -19,3 +19,9 @@
 5. > tj cal 
 (noArgs: display calendar view for current month)
 (month ??/????, display calendar view for given month)
+-----------------------------------------------------
+TODO/GENERAL IDEAS
+> bigevent 
+tags with !BIGEVENT get displayed in calendar 
+> more search functionality with open:
+-> adding a weekday to query just opens that day for current week

@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 mod rummage;
 
 fn main() {
@@ -79,4 +79,9 @@ fn tj_dir() -> PathBuf {
 
 fn local_now_string() -> String {
     chrono::Local::now().format("%d-%m-%Y").to_string()
+}
+
+fn format_string<D: AsRef<NaiveDate>>(date: D, tags: &[&str]) -> String {
+    let date_str = date.as_ref().format("%A %v");
+    return format!("TAGS: {}\n{date_str}", tags.join(" "));
 }
