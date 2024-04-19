@@ -1,9 +1,9 @@
 use std::{
-    env, fs,
-    path::{Path, PathBuf},
+    env::{self}, fs,
+    path::PathBuf,
 };
 
-use chrono::{Datelike, NaiveDate};
+use chrono::NaiveDate;
 mod rummage;
 
 fn main() {
@@ -16,31 +16,33 @@ fn main() {
 }
 
 fn open(args: &[&str]) {
-    open_for_day(if args.is_empty() {
-        local_now_string()
+    let starts_with_date = args.is_empty() || !args.get(0).unwrap().starts_with('@');
+
+    let date = if starts_with_date {
+        chrono::Local::now().date_naive()
     } else {
-        let mut iter = args.into_iter();
-        let mut res = if !args.get(0).unwrap().starts_with('@') {
-            date_format(iter.next().unwrap())
-                .unwrap()
-                .format("%d-%m-%Y")
-                .to_string()
-        } else {
-            local_now_string()
-        };
+        parse_date(args.get(0).unwrap())
+            .unwrap()
+    };
 
-        while let Some(tag) = iter.next() {
-            if !tag.starts_with('@') {
-                panic!("Unknown argument")
-            }
-            res.push_str(format!("_{}", &tag[1..]).as_str())
-        }
+    let mut filename = format_date_for_file_name(&date);
 
-        res
-    })
+    let tags = if starts_with_date && !args.is_empty() {
+        &args[1..]
+    }
+    else {
+        args
+    };
+
+    tags.iter().for_each(|tag| {
+        filename.push('_');
+        filename.push_str(tag);
+    });
+
+    open_for_filename(filename, date, tags);
 }
 
-fn date_format(date: &str) -> Result<NaiveDate, &str> {
+fn parse_date(date: &str) -> Result<NaiveDate, &str> {
     let date: Vec<&str> = date.split(&['/', '-', ' ', '_']).collect();
     if date.len() != 3 {
         return Err("Date is not of the format dd/mm/yyyy");
@@ -62,13 +64,13 @@ fn date_format(date: &str) -> Result<NaiveDate, &str> {
     .ok_or_else(|| "Date does not fall in the required bounds")
 }
 
-fn open_for_day<P: AsRef<Path>>(path: P) {
+fn open_for_filename<S: AsRef<str>>(filename: S, date: NaiveDate, tags: &[&str]) {
     let dir = tj_dir();
     if !dir.exists() {
         fs::create_dir(&dir).unwrap();
     }
     // todo, work on the FnOnce
-    rummage::edit(dir.join(path.as_ref()).with_extension("tj"), || "").unwrap();
+    rummage::edit(dir.join(filename.as_ref()).with_extension("tj"), || default_entry(date, tags)).unwrap();
 }
 
 fn tj_dir() -> PathBuf {
@@ -77,11 +79,11 @@ fn tj_dir() -> PathBuf {
         .join(".tj") //TODO: MAKE STATIC CONSTANT
 }
 
-fn local_now_string() -> String {
-    chrono::Local::now().format("%d-%m-%Y").to_string()
+fn format_date_for_file_name(date: &NaiveDate) -> String {
+    date.format("%d-%m-%Y").to_string()
 }
 
-fn format_string<D: AsRef<NaiveDate>>(date: D, tags: &[&str]) -> String {
-    let date_str = date.as_ref().format("%A %v");
+fn default_entry(date: NaiveDate, tags: &[&str]) -> String {
+    let date_str = date.format("%A %v");
     return format!("TAGS: {}\n{date_str}", tags.join(" "));
 }
