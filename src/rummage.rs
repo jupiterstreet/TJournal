@@ -1,11 +1,33 @@
 use std::{
-    env,
-    ffi::OsStr,
-    path::{Path, PathBuf},
-    process::{Command, Stdio},
+    env, ffi::OsStr, fs, io::Write, path::{Path, PathBuf}, process::{Command, Stdio}
 };
 
-pub fn edit<P: AsRef<Path>>(path: P) -> Result<(), &'static str> {
+pub fn edit<P: AsRef<Path>, B: AsRef<[u8]>, F: FnOnce() -> B>(path: P, default_buf: F) -> Result<(), String> {
+    let path = path.as_ref();
+    let mut file = tempfile::Builder::new().tempfile().map_err(|e| e.to_string())?;
+    if !path.exists() {
+        file.write_all(default_buf().as_ref()).map_err(|e| e.to_string())?;
+    }
+    else {
+        if !path.is_file() { return Err("Requested file exists, but is not a file".to_string()) };
+        file.write_all(&fs::read(path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    }
+
+    let temp_path = file.into_temp_path();
+    open_editor(&temp_path)?;
+
+    let edited = fs::read(&temp_path).map_err(|e| e.to_string())?;
+
+    fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(path).map_err(|e| e.to_string())?
+        .write_all(&edited).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+fn open_editor<P: AsRef<Path>>(path: P) -> Result<(), &'static str> {
     let (editor, args) = get_editor_args()?;
     let status = Command::new(editor)
         .args(args)

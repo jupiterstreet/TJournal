@@ -67,7 +67,8 @@ fn open_for_day<P: AsRef<Path>>(path: P) {
     if !dir.exists() {
         fs::create_dir(&dir).unwrap();
     }
-    rummage::edit(dir.join(path.as_ref()).with_extension("tj")).unwrap();
+    // todo, work on the FnOnce
+    rummage::edit(dir.join(path.as_ref()).with_extension("tj"), || "").unwrap();
 }
 
 fn tj_dir() -> PathBuf {
